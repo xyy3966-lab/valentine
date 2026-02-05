@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Valentine Proposal Premium</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Great+Vibes&family=Montserrat:wght@300;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-red: #ff0040;
+            --soft-pink: #ffb3c1;
+            --gold: #ffd700;
+            --dark-bg: #020000;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* --- STRICT SCROLL HIDE --- */
+        html, body {
+            background-color: var(--dark-bg);
+            font-family: 'Montserrat', sans-serif;
+            color: white;
+            user-select: none;
+            /* STRICT: No scrolling allowed */
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            /* Prevent mobile bounce/scroll */
+            touch-action: none;
+            position: fixed;
+        }
+
+        /* --- Canvas --- */
+        #webgl-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
+        }
+
+        /* --- UI Layer --- */
+        #ui-layer {
+            position: relative; z-index: 10; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            perspective: 1200px; opacity: 0; transition: opacity 2s ease; pointer-events: none;
+        }
+
+        /* --- Payment Gate (STRICT & HORIZONTAL SPREAD) --- */
+        #payment-gate {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.98); z-index: 200;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            backdrop-filter: blur(25px); padding: 20px; text-align: center;
+        }
+
+        .payment-card {
+            background: rgba(20, 0, 0, 0.85); /* Darker Glass */
+            border: 2px solid rgba(255, 0, 64, 0.5);
+            box-shadow: 0 0 60px rgba(255, 0, 0, 0.5), inset 0 0 20px rgba(255, 0, 64, 0.2);
+            padding: 30px; border-radius: 25px;
+            
+            /* LAYOUT: Horizontal Spread */
+            width: 100%;
+            max-width: 700px; /* Wider card for horizontal spread */
+            min-height: 300px;
+            
+            /* Flex Layout for Desktop */
+            display: flex;
+            flex-direction: column; /* Stacks vertically by default, media query handles horizontal */
+            gap: 20px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        /* Desktop Horizontal Layout */
+        @media (min-width: 768px) {
+            .payment-card {
+                flex-direction: row; /* Spread Horizontally */
+                justify-content: space-between;
+                align-items: center;
+                text-align: left;
+                min-height: 250px;
+            }
+            .qr-box { margin-bottom: 0; }
+            .pay-details { margin-top: 0; flex: 1; justify-content: center; display: flex; flex-direction: column; align-items: center; }
+        }
+
+        /* --- ADVERTISEMENT SECTION --- */
+        .ad-section {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,0,64,0.1));
+            border: 1px solid var(--gold);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: left;
+            flex: 1; /* Takes full space in mobile, part in desktop */
+        }
+        .ad-title {
+            font-family: 'Cinzel Decorative', serif;
+            color: var(--gold);
+            font-size: 1.4rem;
+            text-align: center;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .ad-features {
+            list-style: none;
+            font-size: 0.85rem;
+            color: #eee;
+        }
+        .ad-price-tag {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+            margin-top: 10px;
+        }
+        .ad-price-tag b {
+            color: var(--gold);
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Payment Elements Group */
+        .pay-details {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .lock-icon { font-size: 3rem; color: var(--gold); margin-bottom: 10px; }
+        h2.pay-title { font-family: 'Montserrat', sans-serif; margin-bottom: 10px; font-size: 1.8rem; font-weight: bold; letter-spacing: 1px; }
+        p.pay-desc { margin-bottom: 15px; color: #ccc; font-size: 0.9rem; text-align: center; }
+        
+        .qr-box { background: white; padding: 10px; border-radius: 10px; display: inline-block; border: 2px solid var(--gold); box-shadow: 0 0 15px rgba(0,0,0,0.3); }
+        .qr-img { width: 150px; height: 150px; display: block; } /* Slightly smaller QR for horizontal layout */
+        
+        .input-verify {
+            background: rgba(255,255,255,0.1); border: 1px solid #555;
+            padding: 10px 15px; font-family: 'Montserrat', sans-serif; font-size: 1rem; color: white;
+            text-align: center; border-radius: 10px; outline: none; width: 100%;
+            margin-bottom: 10px; letter-spacing: 1px;
+        }
+        .input-verify:focus { border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
+
+        .btn-pay { width: 100%; padding: 12px; background: var(--gold); color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 1rem; margin-bottom: 10px; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-pay:hover { background: #ffe033; transform: scale(1.02); }
+        
+        .btn-verify { width: 100%; padding: 12px; background: linear-gradient(45deg, #ff0040, #cc0033); border: none; color: white; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-verify:hover { background: linear-gradient(45deg, #ff334d, #ff0040); }
+
+        /* --- ADMIN / Entry Screens --- */
+        #setup-screen, #girl-entry-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #2a0000 0%, #000000 100%);
+            z-index: 100; display: none; /* Hidden by default */
+            flex-direction: column;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(10px); padding: 20px;
+            transition: opacity 0.5s;
+        }
+
+        h1.title { font-family: 'Cinzel Decorative', cursive; font-size: 2.5rem; margin-bottom: 30px; background: linear-gradient(to bottom, #ffcccc, #ff0040); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+        
+        .input-wrapper { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; width: 100%; max-width: 400px; }
+        
+        input {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--primary-red);
+            padding: 15px 20px; font-family: 'Montserrat', sans-serif; font-size: 1.2rem; color: white;
+            text-align: center; border-radius: 50px; outline: none; width: 100%;
+            box-shadow: 0 0 15px rgba(255,0,64,0.3); transition: 0.3s;
+        }
+        input:focus { background: rgba(255,255,255,0.15); box-shadow: 0 0 30px var(--primary-red); border-color: white; }
+
+        .btn-start { padding: 18px 50px; background: linear-gradient(45deg, #b30000, #ff0040); color: white; border: none; border-radius: 50px; font-size: 1.3rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 30px rgba(255,0,64,0.5); transition: all 0.4s ease; text-transform: uppercase; }
+        .btn-start:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(255,0,64,0.8); }
+
+        /* --- Link Generator Result --- */
+        #link-result {
+            display: none; text-align: center; margin-top: 20px; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; border: 1px solid var(--gold); width: 100%; max-width: 400px;
+        }
+        #generated-link {
+            width: 100%; padding: 10px; font-size: 0.9rem; margin-bottom: 10px; background: #222; border: 1px solid #555; color: #aaa; border-radius: 5px; word-break: break-all;
+        }
+        .btn-copy { background: #fff; color: #000; font-weight: bold; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-copy:active { transform: scale(0.95); }
+
+        /* --- Story / 3D Text --- */
+        #story-text { font-size: 2.2rem; text-align: center; margin-bottom: 50px; opacity: 0; transition: opacity 1.2s ease; max-width: 90%; text-shadow: 0 5px 20px rgba(0,0,0,1); }
+        .highlight { font-family: 'Great Vibes', cursive; color: var(--primary-red); font-size: 3rem; display: inline-block; }
+
+        /* --- Proposal Stage --- */
+        #proposal-stage { display: none; flex-direction: column; align-items: center; width: 100%; }
+        #question-text { font-family: 'Cinzel Decorative', serif; font-size: 3.5rem; margin-bottom: 60px; text-shadow: 0 0 30px rgba(255,255,255,0.6); text-align: center; }
+        .btn-group { display: flex; gap: 30px; position: relative; min-width: 350px; justify-content: center; }
+        .btn-yes { padding: 25px 70px; font-size: 2.2rem; font-weight: 900; color: white; background: linear-gradient(135deg, #ff0040, #ff4d6d); border: 4px solid white; border-radius: 100px; cursor: pointer; box-shadow: 0 0 50px var(--primary-red); transition: transform 0.3s; z-index: 5; }
+        .btn-yes:hover { transform: scale(1.15) rotate(-5deg); }
+        .btn-no { padding: 20px 50px; font-size: 1.8rem; color: #ddd; background: rgba(40,40,40,0.9); border: 2px solid #666; border-radius: 100px; cursor: pointer; position: fixed; z-index: 20; transition: none; }
+
+        /* --- Surprise --- */
+        #surprise-stage { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 1100px; padding: 20px; }
+        .gallery-3d { display: flex; justify-content: center; gap: 20px; margin-bottom: 60px; flex-wrap: wrap; }
+        .mem-img { width: 280px; height: auto; border-radius: 15px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.4s ease; transform: translateZ(30px); object-fit: cover; }
+        .mem-img:hover { transform: translateZ(80px) scale(1.1); box-shadow: 0 0 30px var(--gold); border-color: var(--gold); }
+        .letter-text { font-family: 'Great Vibes', cursive; font-size: 2.2rem; line-height: 2; text-align: center; color: white; background: rgba(0,0,0,0.4); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); }
+        .line-anim { opacity: 0; transform: translateY(30px); display: block; transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .line-anim.visible { opacity: 1; transform: translateY(0); }
+
+        #flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 300; opacity: 0; pointer-events: none; }
+
+        @media (max-width: 768px) {
+            h2.pay-title { font-size: 1.5rem; } .ad-section { padding: 15px; } .ad-title { font-size: 1.1rem; } .mem-img { width: 100%; max-width: 300px; } .btn-yes { padding: 15px 40px; font-size: 1.5rem; } #question-text { font-size: 2.2rem; }
+        }
+    </style>
+
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/", "gsap": "https://unpkg.com/gsap@3.12.5/index.js" } }
+    </script>
+</head>
+<body>
+
+    <!-- Audio Element for Local MP3 -->
+    <audio id="bg-music" loop>
+        <source src="./sayad.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="flash"></div>
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- PAYMENT GATE (STRICT VERIFICATION + HORIZONTAL LAYOUT + PASSWORD) -->
+    <div id="payment-gate">
+        <div class="payment-card">
+            <!-- ADVERTISEMENT SECTION (Left Side on Desktop) -->
+            <div class="ad-section">
+                <div class="ad-title">💖 WORLD CLASS</div>
+                <ul class="ad-features">
+                    <li>✨ Stunning 3D Heart</li>
+                    <li>🏃‍♂️ Prank Button</li>
+                    <li>💌 Auto WhatsApp</li>
+                    <li>🎵 Romantic Music</li>
+                </ul>
+                <div class="ad-price-tag">₹20 <b>Only</b></div>
+            </div>
+
+            <!-- PAYMENT LOGIC (Right Side on Desktop) -->
+            <div class="pay-details">
+                <div class="lock-icon">🔒</div>
+                <h2 class="pay-title">SECURE GATE</h2>
+                <p class="pay-desc">Pay ₹20 & Enter ID. Secure Unlock Required.</p>
+                
+                <div class="qr-box">
+                    <!-- Amount updated to 20.00 -->
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=8081503932@ptsbi&pn=Proposal%20Unlock&am=20.00&cu=INR" class="qr-img" alt="Scan QR">
+                </div>
+
+                <button class="btn-pay" onclick="payNow()">Pay ₹20 via UPI</button>
+                <input type="text" id="txn-id-input" class="input-verify" placeholder="Enter Transaction ID">
+                <button class="btn-verify" id="btn-verify" onclick="verifyPaymentStrict()">UNLOCK</button>
+                
+                <p style="margin-top:5px; font-size:0.75rem; color:#aaa;">System strictly checks transaction & key.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN SETUP (Hidden by default) -->
+    <section id="setup-screen">
+        <h1 class="title">Create Proposal</h1>
+        <div class="input-wrapper">
+            <input type="text" id="bf-name-input" placeholder="Your Name" maxlength="15">
+            <input type="text" id="bf-phone-input" placeholder="Your WhatsApp No (+91...)" maxlength="15">
+        </div>
+        
+        <button class="btn-start" onclick="generateLink()">Generate Link</button>
+
+        <div id="link-result">
+            <h3 style="color:var(--gold); margin-bottom:10px;">Link Generated!</h3>
+            <input type="text" id="generated-link" readonly>
+            <button class="btn-copy" onclick="copyLink()">Copy Link</button>
+            <p style="font-size:0.8rem; color:#aaa; margin-top:10px;">Send this link to her ❤️</p>
+        </div>
+    </section>
+
+    <!-- GIRL ENTRY -->
+    <section id="girl-entry-screen">
+        <h1 class="title">A Surprise Awaits...</h1>
+        <div class="input-wrapper">
+            <input type="text" id="gf-name-input" placeholder="Enter Your Name" maxlength="15">
+        </div>
+        <button class="btn-start" onclick="girlStartExperience()">Start Journey</button>
+    </section>
+
+    <!-- MAIN PROPOSAL UI -->
+    <div id="ui-layer">
+        <div id="story-text"></div>
+        <div id="proposal-stage">
+            <div id="question-text">Will you be my Valentine, <span id="prop-name">Baby</span>?</div>
+            <div class="btn-group">
+                <button class="btn-yes" id="btn-yes">Yes! ❤️</button>
+                <button class="btn-no" id="btn-no">No</button>
+            </div>
+        </div>
+        <div id="surprise-stage">
+            <div class="gallery-3d">
+                <!-- Clean Images -->
+                <img src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop" class="mem-img">
+                <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=2070&auto=format&fit=crop" class="mem-img">
+                <img src="https://z-cdn-media.chatglm.cn/files/419f5f8a-32fe-49b6-be3a-cc1edaa4ca57.png?auth_key=1870303993-72668db2ee36483887ba2c0f8a8d7f23-0-95cd87ba4b15aa937d51a8f14663104b" class="mem-img">
+            </div>
+            <div class="letter-text" id="letter-content">
+                <span class="line-anim">They say love is magical...</span>
+                <span class="line-anim">And I found that magic in your eyes.</span>
+                <span class="line-anim">Every moment with you feels like a dream.</span>
+                <span class="line-anim">I promise to make you smile forever.</span>
+                <span class="line-anim">Happy Valentine's Day, my world. ❤️</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import gsap from 'gsap';
+
+        // --- GLOBAL STATE ---
+        let girlName = "";
+        let bfName = "";
+        let bfNumber = "";
+        let isPlaying = false;
+        
+        // PRICE: ₹20
+        const upiLink = "upi://pay?pa=8081503932@ptsbi&pn=ProposalUnlock&am=20.00&cu=INR";
+        const audio = document.getElementById('bg-music');
+        audio.volume = 0.5;
+
+        // --- URL PARAMETER CHECK (Core Logic) ---
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        function init() {
+            // Check if Link is generated (Girl Mode)
+            if (urlParams.has('bfPhone')) {
+                // GIRL MODE
+                bfName = urlParams.get('bfName') || "Someone";
+                bfNumber = urlParams.get('bfPhone');
+                console.log("Girl Mode Detected.");
+
+                // Hide Admin/Payment
+                document.getElementById('payment-gate').style.display = 'none';
+                document.getElementById('setup-screen').style.display = 'none';
+                
+                // Show Girl Entry
+                document.getElementById('girl-entry-screen').style.display = 'flex';
+            } else {
+                // ADMIN MODE (Boyfriend)
+                console.log("Admin Setup Mode - Locked");
+                // Payment gate is visible by default
+                // Setup screen is hidden by CSS (display: none)
+            }
+        }
+
+        // --- PAYMENT LOGIC ---
+        window.payNow = function() { window.location.href = upiLink; };
+        
+        // --- STRICT SECURITY: SECRET PASSWORD CHECK ---
+        window.verifyPaymentStrict = function() {
+            const txnInput = document.getElementById('txn-id-input');
+            const btn = document.getElementById('btn-verify');
+            const txnId = txnInput.value.trim();
+            const ADMIN_PASSWORD = "valentine2025"; // HARDCODED SECRET KEY
+
+            // 1. Validate Transaction ID Format (Basic Check)
+            if (txnId.length < 4) {
+                alert("❌ Invalid Transaction ID.\n\nPlease complete the ₹20 payment.");
+                txnInput.style.borderColor = 'red';
+                return;
+            }
+
+            // 2. START STRICT UNLOCK SEQUENCE
+            btn.innerText = "Checking...";
+            btn.style.background = "#555";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                // 3. SECURITY: PROMPT FOR SECRET KEY
+                // This prevents users from just typing "1234" to bypass. 
+                // They must know the secret password "valentine2025"
+                const userPass = prompt("🔒 SECURITY CHECK:\n\nAdmin Password Required.\n\nEnter Secret Key to Unlock:");
+                
+                if (userPass !== ADMIN_PASSWORD) {
+                    alert("❌ ACCESS DENIED\n\nWrong Admin Password.");
+                    // Reset button
+                    btn.innerText = "UNLOCK";
+                    btn.style.background = "linear-gradient(45deg, #ff0040, #cc0033)";
+                    btn.disabled = false;
+                    return;
+                }
+
+                // 4. SUCCESS
+                alert("✅ Access Granted.\n\nSystem Unlocked.");
+                gsap.to("#payment-gate", { opacity: 0, duration: 1, onComplete: () => {
+                    document.getElementById('payment-gate').style.display = 'none';
+                    document.getElementById('setup-screen').style.display = 'flex';
+                }});
+
+            }, 1000); 
+        };
+
+        // --- LINK GENERATION LOGIC ---
+        window.generateLink = function() {
+            const bName = document.getElementById('bf-name-input').value.trim();
+            const bPhone = document.getElementById('bf-phone-input').value.trim();
+            
+            if (!bPhone) return alert("Please enter your WhatsApp number!");
+
+            // --- MUSIC START ---
+            // Music starts ONLY after user clicks "Generate Link" button
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Auto-play prevented, interaction required.");
+                });
+            }
+
+            // Construct URL for Girlfriend
+            const baseUrl = window.location.href.split('?')[0];
+            const finalUrl = `${baseUrl}?bfName=${encodeURIComponent(bName)}&bfPhone=${encodeURIComponent(bPhone)}`;
+
+            document.getElementById('generated-link').value = finalUrl;
+            document.getElementById('link-result').style.display = 'block';
+        };
+
+        window.copyLink = function() {
+            const copyText = document.getElementById("generated-link");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            alert("Link Copied! Send it to her now.");
+        };
+
+        // --- GIRL ENTRY LOGIC ---
+        window.girlStartExperience = function() {
+            const gName = document.getElementById('gf-name-input').value.trim();
+            if (!gName) return alert("Please enter your name!");
+
+            girlName = gName;
+            
+            // Fade out entry screen
+            const es = document.getElementById('girl-entry-screen');
+            es.style.opacity = 0;
+            setTimeout(() => {
+                es.style.display = 'none';
+                
+                // Enable UI
+                document.getElementById('ui-layer').style.pointerEvents = "auto";
+                document.getElementById('ui-layer').style.opacity = "1";
+                
+                // Start
+                isPlaying = true;
+                playScene();
+                
+                // Ensure Audio Plays (if admin click didn't persist or she reopened)
+                audio.play().catch(e => console.log(e));
+            }, 500);
+        };
+
+        // --- THREE.JS SETUP ---
+        const canvas = document.getElementById('webgl-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050000, 0.02);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 18);
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.strength = 1.2;
+        composer.addPass(bloomPass);
+
+        // Heart
+        const heartShape = new THREE.Shape();
+        heartShape.moveTo(0 + 2.5, 0 + 2.5);
+        heartShape.bezierCurveTo(0 + 2.5, 0 + 2.5, 0 + 2.0, 0, 0, 0);
+        heartShape.bezierCurveTo(0 - 3.0, 0, 0 - 3.0, 0 + 3.5, 0 - 3.0, 0 + 3.5);
+        heartShape.bezierCurveTo(0 - 3.0, 0 + 5.5, 0 - 1.0, 0 + 7.7, 0 + 2.5, 0 + 9.5);
+        heartShape.bezierCurveTo(0 + 6.0, 0 + 7.7, 0 + 8.0, 0 + 5.5, 0 + 8.0, 0 + 3.5);
+        heartShape.bezierCurveTo(0 + 8.0, 0 + 3.5, 0 + 8.0, 0, 0 + 5.0, 0);
+        heartShape.bezierCurveTo(0 + 3.5, 0, 0 + 2.5, 0 + 2.5, 0 + 2.5, 0 + 2.5);
+        const heartGeo = new THREE.ExtrudeGeometry(heartShape, { depth: 1, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.4, bevelThickness: 0.4 });
+        heartGeo.center();
+        heartGeo.rotateZ(Math.PI);
+        const heart = new THREE.Mesh(heartGeo, new THREE.MeshPhysicalMaterial({ color: 0xff0040, emissive: 0x550000, roughness: 0.1 }));
+        scene.add(heart);
+
+        // Particles
+        const pCount = 1500;
+        const pGeo = new THREE.BufferGeometry();
+        const pPos = new Float32Array(pCount * 3);
+        const pCol = new Float32Array(pCount * 3);
+        for(let i=0; i<pCount; i++) {
+            pPos[i*3] = (Math.random() - 0.5) * 35; pPos[i*3+1] = (Math.random() - 0.5) * 35; pPos[i*3+2] = (Math.random() - 0.5) * 35;
+            const c = Math.random();
+            if(c<0.33) { pCol[i*3]=1; pCol[i*3+1]=0; pCol[i*3+2]=0.2; }
+            else if(c<0.66) { pCol[i*3]=1; pCol[i*3+1]=0.7; pCol[i*3+2]=0.8; }
+            else { pCol[i*3]=1; pCol[i*3+1]=0.8; pCol[i*3+2]=0; }
+        }
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+        pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+        scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 0.15, vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false })));
+
+        // Interaction
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 2;
+            const y = (e.clientY / window.innerHeight - 0.5) * 2;
+            gsap.to(camera.position, { x: x * 1.5, y: y * 1.5, duration: 1 });
+            gsap.to(heart.rotation, { x: y * 0.5, z: x * 0.5, duration: 1 });
+        });
+
+        // Story
+        const storyScenes = [
+            { text: "Hey <span class='highlight'>{{NAME}}</span>..." },
+            { text: "The world is full of noise..." },
+            { text: "But in my heart, I only hear your name." },
+            { text: "I have one simple question..." }
+        ];
+        let currentScene = 0;
+
+        function playScene() {
+            if (currentScene >= storyScenes.length) {
+                startProposal();
+                return;
+            }
+            const el = document.getElementById('story-text');
+            el.innerHTML = storyScenes[currentScene].text.replace('{{NAME}}', girlName);
+            el.style.opacity = 1;
+            currentScene++;
+            setTimeout(playScene, 3500);
+        }
+
+        function startProposal() {
+            document.getElementById('story-text').style.display = 'none';
+            document.getElementById('proposal-stage').style.display = 'flex';
+            document.getElementById('prop-name').innerText = girlName;
+        }
+
+        // Escaping "No"
+        const btnNo = document.getElementById('btn-no');
+        const taunts = ["No?", "Really?", "Think again!", "Please?", "Not today!", "Don't do this!", "Just click Yes!"];
+        let tIndex = 0;
+        function escapeButton(e) {
+            const r = btnNo.getBoundingClientRect();
+            btnNo.style.left = Math.random() * (window.innerWidth - r.width - 20) + 'px';
+            btnNo.style.top = Math.random() * (window.innerHeight - r.height - 20) + 'px';
+            btnNo.innerText = taunts[tIndex % taunts.length];
+            tIndex++;
+            playSound(150, 'sawtooth', 0.1);
+        }
+        btnNo.addEventListener('mouseover', escapeButton);
+        btnNo.addEventListener('touchstart', (e) => { e.preventDefault(); escapeButton(e.touches[0]); });
+
+        // "Yes" Button
+        document.getElementById('btn-yes').addEventListener('click', () => {
+            playSound(600, 'sine', 1.0);
+            const flash = document.getElementById('flash');
+            flash.style.opacity = 1;
+            gsap.to(flash, { opacity: 0, duration: 1.5 });
+            document.getElementById('proposal-stage').style.display = 'none';
+            const s = document.getElementById('surprise-stage');
+            s.style.display = 'flex';
+            document.querySelectorAll('.line-anim').forEach((line, i) => {
+                setTimeout(() => { line.classList.add('visible'); playSound(400 + (i*50), 'triangle', 0.3); }, 500 + (i * 1000));
+            });
+            gsap.to(heart.scale, { x: 5, y: 5, z: 5, duration: 1.5, ease: "elastic.out(1, 0.3)" });
+            gsap.to(bloomPass, { strength: 4.0, duration: 0.5, yoyo: true, repeat: 5 });
+            
+            // --- WHATSAPP TRIGGER (Mobile Fix: _top) ---
+            setTimeout(() => {
+                if(bfNumber) {
+                    const num = bfNumber.replace(/[^0-9]/g, '');
+                    const msg = `Hey ${bfName}! This is ${girlName}. I just clicked Yes! I love you ❤️ (Sent from your Valentine Proposal)`;
+                    const waLink = `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+                    
+                    console.log("Attempting to open WhatsApp:", waLink);
+                    window.open(waLink, '_top'); 
+                }
+            }, 10000); // 10 Seconds Delay
+        });
+
+        // Sound Effects Helper
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(f, t, d) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = t; o.frequency.value = f;
+            g.gain.value = 0.1;
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + d);
+        }
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = clock.getElapsedTime();
+            if(isPlaying) {
+                const speed = document.getElementById('proposal-stage').style.display === 'flex' ? 6 : 3;
+                const p = Math.sin(t * speed) * 0.05 + 1;
+                heart.scale.set(p, p, p);
+                heart.rotation.y += 0.01;
+            }
+            composer.render();
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init(); // Start Logic
+        animate();
+    </script>
+</body>
+</html>
