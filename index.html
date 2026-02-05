@@ -47,11 +47,112 @@
             perspective: 1200px; opacity: 0; transition: opacity 2s ease; pointer-events: none;
         }
 
+        /* --- Payment Gate (VERTICAL ONLY) --- */
+        #payment-gate {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #4a0000 0%, #000000 100%),
+                        url('data:image/svg+xml;utf8,<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g fill="%23ffffff" fill-opacity="0.03"><circle cx="20" cy="20" r="2"/></g></svg>');
+            background-size: 100% 100%, 100px 100px;
+            animation: bgMove 20s linear infinite;
+            z-index: 200;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            backdrop-filter: blur(20px); padding: 20px; text-align: center;
+            
+            /* SCROLL SUPPORT (HIDDEN BAR) */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @keyframes bgMove {
+            from { background-position: 0 0, 0 0; }
+            to { background-position: 0 0, 100px 100px; }
+        }
+
+        /* Payment Card - Vertical Only */
+        .payment-card {
+            background: rgba(20, 0, 0, 0.9); 
+            border: 2px solid rgba(255, 0, 64, 0.5);
+            padding: 30px;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 400px; /* Fixed Vertical Width */
+            box-shadow: 0 0 60px rgba(255, 0, 0, 0.3), inset 0 0 20px rgba(255, 0, 64, 0.2);
+            animation: float 3s ease-in-out infinite;
+            
+            /* STRICTLY VERTICAL LAYOUT */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        /* --- ADVERTISEMENT SECTION --- */
+        .ad-section {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,0,64,0.1));
+            border: 1px solid var(--gold);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
+        }
+        .ad-title {
+            font-family: 'Cinzel Decorative', serif;
+            color: var(--gold);
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .ad-features {
+            list-style: none; margin-bottom: 10px; font-size: 0.85rem; color: #ddd; text-align: left; padding-left: 5px;
+        }
+        .ad-features li { margin-bottom: 4px; display: flex; align-items: center; }
+        .ad-features li span { margin-right: 8px; font-size: 1rem; }
+        .ad-price-tag { text-align: center; font-weight: bold; font-size: 1rem; color: white; }
+        .ad-price-tag b { color: var(--gold); font-size: 1.3rem; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+        /* Payment UI Elements */
+        .lock-icon { font-size: 3rem; color: var(--gold); margin-bottom: 15px; filter: drop-shadow(0 0 15px var(--gold)); text-align: center; }
+        h2.pay-title { font-family: 'Cinzel Decorative', serif; margin-bottom: 10px; font-size: 1.5rem; text-align: center; }
+        p.pay-desc { margin-bottom: 15px; color: #ddd; font-size: 0.85rem; text-align: center; }
+        
+        .qr-box { 
+            background: white; 
+            padding: 10px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            border: 2px solid var(--gold); 
+        }
+        .qr-img { width: 140px; height: 140px; display: block; }
+        
+        /* Simple Unlock Button */
+        .btn-unlock { 
+            width: 100%; 
+            padding: 12px; 
+            background: linear-gradient(45deg, #ff0040, #cc0033); 
+            border: none; 
+            color: white; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            text-transform: uppercase; 
+        }
+        .btn-unlock:hover { background: linear-gradient(45deg, #ff334d, #ff0040); }
+
         /* --- Admin / Entry Screens --- */
         #setup-screen, #girl-entry-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at center, #2a0000 0%, #000000 100%);
-            z-index: 100; display: none; /* Hidden by default */
+            z-index: 100; display: none; 
             flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); padding: 20px; transition: opacity 0.5s;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -97,7 +198,7 @@
         #flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 300; opacity: 0; pointer-events: none; }
 
         @media (max-width: 768px) {
-            .mem-img { width: 100%; max-width: 300px; } .btn-yes { padding: 15px 40px; font-size: 1.5rem; } #question-text { font-size: 2.2rem; }
+            h2.pay-title { font-size: 1.5rem; } .mem-img { width: 100%; max-width: 300px; } .btn-yes { padding: 15px 40px; font-size: 1.5rem; } #question-text { font-size: 2.2rem; }
         }
     </style>
 
@@ -115,7 +216,36 @@
     <div id="flash"></div>
     <canvas id="webgl-canvas"></canvas>
 
-    <!-- ADMIN SETUP (Now Visible by Default) -->
+    <!-- PAYMENT GATE (VERTICAL, NO PASSKEY INPUT) -->
+    <div id="payment-gate">
+        <div class="payment-card">
+            <!-- ADVERTISEMENT SECTION -->
+            <div class="ad-section">
+                <div class="ad-title">💖 WORLD CLASS</div>
+                <ul class="ad-features">
+                    <li>✨ Stunning 3D Heart Animation</li>
+                    <li>🏃‍♂️ Fun "Runaway No" Button Prank</li>
+                    <li>💌 Auto WhatsApp Surprise Message</li>
+                    <li>🎵 Romantic Background Music</li>
+                </ul>
+                <div class="ad-price">Unlock for just <b>₹20</b></div>
+            </div>
+
+            <!-- PAYMENT LOGIC -->
+            <div class="lock-icon">🔐</div>
+            <h2 class="pay-title">Simple Payment</h2>
+            <p class="pay-desc">Scan QR Code & Pay ₹20. Click Unlock below to proceed.</p>
+            
+            <div class="qr-box">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=8081503932@ptsbi&pn=ProposalUnlock&am=20.00&cu=INR" class="qr-img" alt="Scan QR">
+            </div>
+
+            <!-- SIMPLE UNLOCK BUTTON (NO INPUT) -->
+            <button class="btn-unlock" id="btn-unlock" onclick="unlockExperience()">Unlock Now</button>
+        </div>
+    </div>
+
+    <!-- ADMIN SETUP (Hidden by default) -->
     <section id="setup-screen">
         <h1 class="title">Create Proposal</h1>
         <div class="input-wrapper">
@@ -180,6 +310,7 @@
         let bfName = "";
         let bfNumber = "";
         let isPlaying = false;
+        const upiLink = "upi://pay?pa=8081503932@ptsbi&pn=ProposalUnlock&am=20.00&cu=INR";
         const audio = document.getElementById('bg-music');
         audio.volume = 0.5;
 
@@ -193,18 +324,38 @@
                 bfNumber = urlParams.get('bfPhone');
                 console.log("Girl Mode Detected.");
 
-                // Hide Admin
+                // Hide Payment & Admin
+                document.getElementById('payment-gate').style.display = 'none';
                 document.getElementById('setup-screen').style.display = 'none';
                 
                 // Show Girl Entry
                 document.getElementById('girl-entry-screen').style.display = 'flex';
             } else {
-                // ADMIN MODE (Boyfriend) - UNLOCKED DIRECTLY
-                console.log("Admin Setup Mode - Unlocked");
-                // Show Setup Screen Directly
-                document.getElementById('setup-screen').style.display = 'flex';
+                // ADMIN MODE (Boyfriend)
+                console.log("Admin Mode - Payment Required");
+                // Show Payment Gate by default
+                // Setup screen is hidden
             }
         }
+
+        // --- SIMPLE UNLOCK LOGIC (NO PASSKEY) ---
+        window.unlockExperience = function() {
+            const btn = document.getElementById('btn-unlock');
+            
+            // Simulation of unlocking
+            btn.innerText = "Unlocking...";
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                // SUCCESS - Go to Setup Screen
+                gsap.to("#payment-gate", { opacity: 0, duration: 1, onComplete: () => {
+                    document.getElementById('payment-gate').style.display = 'none';
+                    document.getElementById('setup-screen').style.display = 'flex';
+                    btn.innerText = "Unlock Now";
+                    btn.disabled = false;
+                }});
+            }, 1000);
+        };
 
         // --- LINK GENERATION LOGIC ---
         window.generateLink = function() {
