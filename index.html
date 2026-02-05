@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Valentine Proposal Premium</title>
+    <title>Valentine Proposal</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,19 +20,21 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* --- STRICT SCROLL HIDE --- */
-        html, body {
+        /* --- HIDE SCROLLBARS EVERYWHERE (INNER & OUTER) --- */
+        /* Firefox */
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Chrome, Safari, Edge */
+        *::-webkit-scrollbar { display: none; }
+
+        body {
             background-color: var(--dark-bg);
             font-family: 'Montserrat', sans-serif;
             color: white;
             user-select: none;
-            /* STRICT: No scrolling allowed */
-            overflow: hidden;
-            height: 100%;
-            width: 100%;
-            /* Prevent mobile bounce/scroll */
-            touch-action: none;
-            position: fixed;
+            overflow: hidden; 
+            min-height: 100vh;
+            touch-action: none; 
+            overscroll-behavior: none;
         }
 
         /* --- Canvas --- */
@@ -42,151 +44,127 @@
 
         /* --- UI Layer --- */
         #ui-layer {
-            position: relative; z-index: 10; width: 100%; height: 100%;
+            position: relative; z-index: 10; width: 100%; min-height: 100vh;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             perspective: 1200px; opacity: 0; transition: opacity 2s ease; pointer-events: none;
         }
 
-        /* --- Payment Gate (STRICT & HORIZONTAL SPREAD) --- */
+        /* --- Payment Gate (STRICTLY VERTICAL) --- */
         #payment-gate {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.98); z-index: 200;
+            /* Animated Deep Red/Cosmic Background */
+            background: radial-gradient(circle at center, #4a0000 0%, #000000 100%),
+                        url('data:image/svg+xml;utf8,<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g fill="%23ffffff" fill-opacity="0.03"><circle cx="20" cy="20" r="2"/></g></svg>');
+            background-size: 100% 100%, 100px 100px;
+            animation: bgMove 20s linear infinite;
+            z-index: 200;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            backdrop-filter: blur(25px); padding: 20px; text-align: center;
+            backdrop-filter: blur(20px); padding: 20px; text-align: center;
+            
+            /* SCROLL SUPPORT (BUT SCROLLBAR IS HIDDEN) */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
+        @keyframes bgMove {
+            from { background-position: 0 0, 0 0; }
+            to { background-position: 0 0, 100px 100px; }
+        }
+
+        /* Payment Card - Vertical Only */
         .payment-card {
-            background: rgba(20, 0, 0, 0.85); /* Darker Glass */
+            background: rgba(20, 0, 0, 0.9); 
             border: 2px solid rgba(255, 0, 64, 0.5);
-            box-shadow: 0 0 60px rgba(255, 0, 0, 0.5), inset 0 0 20px rgba(255, 0, 64, 0.2);
-            padding: 30px; border-radius: 25px;
+            padding: 30px;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 400px; /* Fixed Vertical Width */
+            box-shadow: 0 0 60px rgba(255, 0, 0, 0.3), inset 0 0 20px rgba(255, 0, 64, 0.2);
+            animation: float 3s ease-in-out infinite;
             
-            /* LAYOUT: Horizontal Spread */
-            width: 100%;
-            max-width: 700px; /* Wider card for horizontal spread */
-            min-height: 300px;
-            
-            /* Flex Layout for Desktop */
+            /* STRICTLY VERTICAL LAYOUT */
             display: flex;
-            flex-direction: column; /* Stacks vertically by default, media query handles horizontal */
-            gap: 20px;
-            animation: float 4s ease-in-out infinite;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-        /* Desktop Horizontal Layout */
-        @media (min-width: 768px) {
-            .payment-card {
-                flex-direction: row; /* Spread Horizontally */
-                justify-content: space-between;
-                align-items: center;
-                text-align: left;
-                min-height: 250px;
-            }
-            .qr-box { margin-bottom: 0; }
-            .pay-details { margin-top: 0; flex: 1; justify-content: center; display: flex; flex-direction: column; align-items: center; }
-        }
 
         /* --- ADVERTISEMENT SECTION --- */
         .ad-section {
             background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,0,64,0.1));
             border: 1px solid var(--gold);
             border-radius: 15px;
-            padding: 20px;
-            text-align: left;
-            flex: 1; /* Takes full space in mobile, part in desktop */
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
         }
         .ad-title {
             font-family: 'Cinzel Decorative', serif;
             color: var(--gold);
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             text-align: center;
             margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         .ad-features {
-            list-style: none;
-            font-size: 0.85rem;
-            color: #eee;
+            list-style: none; margin-bottom: 10px; font-size: 0.85rem; color: #ddd; text-align: left; padding-left: 5px;
         }
-        .ad-price-tag {
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: white;
-            margin-top: 10px;
-        }
-        .ad-price-tag b {
-            color: var(--gold);
-            font-size: 1.5rem;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
+        .ad-features li { margin-bottom: 4px; display: flex; align-items: center; }
+        .ad-features li span { margin-right: 8px; font-size: 1rem; }
+        .ad-price-tag { text-align: center; font-weight: bold; font-size: 1rem; color: white; }
+        .ad-price-tag b { color: var(--gold); font-size: 1.3rem; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
 
-        /* Payment Elements Group */
-        .pay-details {
-            display: flex;
-            flex-direction: column;
+        /* Payment UI Elements */
+        .lock-icon { font-size: 3rem; color: var(--gold); margin-bottom: 15px; filter: drop-shadow(0 0 15px var(--gold)); text-align: center; }
+        h2.pay-title { font-family: 'Cinzel Decorative', serif; margin-bottom: 10px; font-size: 1.5rem; text-align: center; }
+        p.pay-desc { margin-bottom: 15px; color: #ddd; font-size: 0.85rem; text-align: center; }
+        
+        .qr-box { 
+            background: white; 
+            padding: 10px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            display: flex; 
+            justify-content: center;
             align-items: center;
-            gap: 15px;
-            width: 100%;
+            border: 2px solid var(--gold); 
         }
-
-        .lock-icon { font-size: 3rem; color: var(--gold); margin-bottom: 10px; }
-        h2.pay-title { font-family: 'Montserrat', sans-serif; margin-bottom: 10px; font-size: 1.8rem; font-weight: bold; letter-spacing: 1px; }
-        p.pay-desc { margin-bottom: 15px; color: #ccc; font-size: 0.9rem; text-align: center; }
+        .qr-img { width: 140px; height: 140px; display: block; }
         
-        .qr-box { background: white; padding: 10px; border-radius: 10px; display: inline-block; border: 2px solid var(--gold); box-shadow: 0 0 15px rgba(0,0,0,0.3); }
-        .qr-img { width: 150px; height: 150px; display: block; } /* Slightly smaller QR for horizontal layout */
-        
-        .input-verify {
-            background: rgba(255,255,255,0.1); border: 1px solid #555;
-            padding: 10px 15px; font-family: 'Montserrat', sans-serif; font-size: 1rem; color: white;
-            text-align: center; border-radius: 10px; outline: none; width: 100%;
-            margin-bottom: 10px; letter-spacing: 1px;
-        }
+        /* Inputs & Buttons */
+        .input-verify { background: rgba(255,255,255,0.1); border: 1px solid #555; padding: 12px; font-family: 'Montserrat', sans-serif; font-size: 1rem; color: white; text-align: center; border-radius: 8px; outline: none; width: 100%; margin-bottom: 10px; letter-spacing: 1px; }
         .input-verify:focus { border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
-
-        .btn-pay { width: 100%; padding: 12px; background: var(--gold); color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 1rem; margin-bottom: 10px; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-        .btn-pay:hover { background: #ffe033; transform: scale(1.02); }
         
-        .btn-verify { width: 100%; padding: 12px; background: linear-gradient(45deg, #ff0040, #cc0033); border: none; color: white; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-verify { width: 100%; padding: 12px; background: linear-gradient(45deg, #ff0040, #cc0033); border: none; color: white; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
         .btn-verify:hover { background: linear-gradient(45deg, #ff334d, #ff0040); }
 
-        /* --- ADMIN / Entry Screens --- */
+        /* --- Admin / Entry Screens --- */
         #setup-screen, #girl-entry-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at center, #2a0000 0%, #000000 100%);
-            z-index: 100; display: none; /* Hidden by default */
-            flex-direction: column;
-            justify-content: center; align-items: center;
-            backdrop-filter: blur(10px); padding: 20px;
-            transition: opacity 0.5s;
+            z-index: 100; display: none; 
+            flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); padding: 20px; transition: opacity 0.5s;
+            overflow-y: auto; /* Scrollable but bar hidden */
+            -webkit-overflow-scrolling: touch;
         }
 
         h1.title { font-family: 'Cinzel Decorative', cursive; font-size: 2.5rem; margin-bottom: 30px; background: linear-gradient(to bottom, #ffcccc, #ff0040); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
         
         .input-wrapper { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; width: 100%; max-width: 400px; }
         
-        input {
-            background: rgba(255,255,255,0.05); border: 1px solid var(--primary-red);
-            padding: 15px 20px; font-family: 'Montserrat', sans-serif; font-size: 1.2rem; color: white;
-            text-align: center; border-radius: 50px; outline: none; width: 100%;
-            box-shadow: 0 0 15px rgba(255,0,64,0.3); transition: 0.3s;
-        }
+        input { background: rgba(255,255,255,0.05); border: 1px solid var(--primary-red); padding: 15px 20px; font-family: 'Montserrat', sans-serif; font-size: 1.2rem; color: white; text-align: center; border-radius: 50px; outline: none; width: 90%; box-shadow: 0 0 15px rgba(255,0,64,0.3); transition: 0.3s; }
         input:focus { background: rgba(255,255,255,0.15); box-shadow: 0 0 30px var(--primary-red); border-color: white; }
 
         .btn-start { padding: 18px 50px; background: linear-gradient(45deg, #b30000, #ff0040); color: white; border: none; border-radius: 50px; font-size: 1.3rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 30px rgba(255,0,64,0.5); transition: all 0.4s ease; text-transform: uppercase; }
         .btn-start:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(255,0,64,0.8); }
 
         /* --- Link Generator Result --- */
-        #link-result {
-            display: none; text-align: center; margin-top: 20px; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; border: 1px solid var(--gold); width: 100%; max-width: 400px;
-        }
-        #generated-link {
-            width: 100%; padding: 10px; font-size: 0.9rem; margin-bottom: 10px; background: #222; border: 1px solid #555; color: #aaa; border-radius: 5px; word-break: break-all;
-        }
+        #link-result { display: none; text-align: center; margin-top: 20px; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; border: 1px solid var(--gold); width: 100%; max-width: 400px; }
+        #generated-link { width: 100%; padding: 10px; font-size: 0.9rem; margin-bottom: 10px; background: #222; border: 1px solid #555; color: #aaa; border-radius: 5px; word-break: break-all; }
         .btn-copy { background: #fff; color: #000; font-weight: bold; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
         .btn-copy:active { transform: scale(0.95); }
 
@@ -214,7 +192,7 @@
         #flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 300; opacity: 0; pointer-events: none; }
 
         @media (max-width: 768px) {
-            h2.pay-title { font-size: 1.5rem; } .ad-section { padding: 15px; } .ad-title { font-size: 1.1rem; } .mem-img { width: 100%; max-width: 300px; } .btn-yes { padding: 15px 40px; font-size: 1.5rem; } #question-text { font-size: 2.2rem; }
+            h2.pay-title { font-size: 1.5rem; } .mem-img { width: 100%; max-width: 300px; } .btn-yes { padding: 15px 40px; font-size: 1.5rem; } #question-text { font-size: 2.2rem; }
         }
     </style>
 
@@ -232,38 +210,33 @@
     <div id="flash"></div>
     <canvas id="webgl-canvas"></canvas>
 
-    <!-- PAYMENT GATE (STRICT VERIFICATION + HORIZONTAL LAYOUT + PASSWORD) -->
+    <!-- PAYMENT GATE (VERTICAL ONLY) -->
     <div id="payment-gate">
         <div class="payment-card">
-            <!-- ADVERTISEMENT SECTION (Left Side on Desktop) -->
+            <!-- ADVERTISEMENT SECTION -->
             <div class="ad-section">
                 <div class="ad-title">💖 WORLD CLASS</div>
                 <ul class="ad-features">
-                    <li>✨ Stunning 3D Heart</li>
-                    <li>🏃‍♂️ Prank Button</li>
-                    <li>💌 Auto WhatsApp</li>
-                    <li>🎵 Romantic Music</li>
+                    <li>✨ Stunning 3D Heart Animation</li>
+                    <li>🏃‍♂️ Fun "Runaway No" Button Prank</li>
+                    <li>💌 Auto WhatsApp Surprise Message</li>
+                    <li>🎵 Romantic Background Music</li>
                 </ul>
-                <div class="ad-price-tag">₹20 <b>Only</b></div>
+                <div class="ad-price">Unlock for just <b>₹20</b></div>
             </div>
 
-            <!-- PAYMENT LOGIC (Right Side on Desktop) -->
-            <div class="pay-details">
-                <div class="lock-icon">🔒</div>
-                <h2 class="pay-title">SECURE GATE</h2>
-                <p class="pay-desc">Pay ₹20 & Enter ID. Secure Unlock Required.</p>
-                
-                <div class="qr-box">
-                    <!-- Amount updated to 20.00 -->
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=8081503932@ptsbi&pn=Proposal%20Unlock&am=20.00&cu=INR" class="qr-img" alt="Scan QR">
-                </div>
-
-                <button class="btn-pay" onclick="payNow()">Pay ₹20 via UPI</button>
-                <input type="text" id="txn-id-input" class="input-verify" placeholder="Enter Transaction ID">
-                <button class="btn-verify" id="btn-verify" onclick="verifyPaymentStrict()">UNLOCK</button>
-                
-                <p style="margin-top:5px; font-size:0.75rem; color:#aaa;">System strictly checks transaction & key.</p>
+            <!-- PAYMENT LOGIC (SIMULATED SCAN) -->
+            <div class="lock-icon">🔐</div>
+            <h2 class="pay-title">Simple Transaction Entry</h2>
+            <p class="pay-desc">Scan QR Code & Pay ₹20. Enter Transaction ID below to verify.</p>
+            
+            <div class="qr-box">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=8081503932@ptsbi&pn=ProposalUnlock&am=20.00&cu=INR" class="qr-img" alt="Scan QR">
             </div>
+
+            <!-- SIMPLE TRANSACTION ID INPUT -->
+            <input type="text" id="txn-id-input" class="input-verify" placeholder="Enter Transaction ID">
+            <button class="btn-verify" id="btn-verify">Verify Payment</button>
         </div>
     </div>
 
@@ -306,7 +279,6 @@
         </div>
         <div id="surprise-stage">
             <div class="gallery-3d">
-                <!-- Clean Images -->
                 <img src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop" class="mem-img">
                 <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=2070&auto=format&fit=crop" class="mem-img">
                 <img src="https://z-cdn-media.chatglm.cn/files/419f5f8a-32fe-49b6-be3a-cc1edaa4ca57.png?auth_key=1870303993-72668db2ee36483887ba2c0f8a8d7f23-0-95cd87ba4b15aa937d51a8f14663104b" class="mem-img">
@@ -333,13 +305,10 @@
         let bfName = "";
         let bfNumber = "";
         let isPlaying = false;
-        
-        // PRICE: ₹20
         const upiLink = "upi://pay?pa=8081503932@ptsbi&pn=ProposalUnlock&am=20.00&cu=INR";
         const audio = document.getElementById('bg-music');
         audio.volume = 0.5;
 
-        // --- URL PARAMETER CHECK (Core Logic) ---
         const urlParams = new URLSearchParams(window.location.search);
         
         function init() {
@@ -364,51 +333,34 @@
             }
         }
 
-        // --- PAYMENT LOGIC ---
         window.payNow = function() { window.location.href = upiLink; };
         
-        // --- STRICT SECURITY: SECRET PASSWORD CHECK ---
-        window.verifyPaymentStrict = function() {
-            const txnInput = document.getElementById('txn-id-input');
+        // --- SIMPLE FRONTEND VERIFICATION ---
+        window.verifyPayment = function() {
+            const input = document.getElementById('txn-id-input');
             const btn = document.getElementById('btn-verify');
-            const txnId = txnInput.value.trim();
-            const ADMIN_PASSWORD = "valentine2025"; // HARDCODED SECRET KEY
+            const txnId = input.value.trim();
 
-            // 1. Validate Transaction ID Format (Basic Check)
-            if (txnId.length < 4) {
-                alert("❌ Invalid Transaction ID.\n\nPlease complete the ₹20 payment.");
-                txnInput.style.borderColor = 'red';
+            if (txnId.length < 2) {
+                alert("Please enter your Transaction ID to verify.");
                 return;
             }
 
-            // 2. START STRICT UNLOCK SEQUENCE
-            btn.innerText = "Checking...";
-            btn.style.background = "#555";
+            // SIMULATED SERVER CHECK
+            btn.innerText = "Verifying...";
             btn.disabled = true;
-
+            
             setTimeout(() => {
-                // 3. SECURITY: PROMPT FOR SECRET KEY
-                // This prevents users from just typing "1234" to bypass. 
-                // They must know the secret password "valentine2025"
-                const userPass = prompt("🔒 SECURITY CHECK:\n\nAdmin Password Required.\n\nEnter Secret Key to Unlock:");
+                // SUCCESS SIMULATION
+                alert("✅ Transaction Verified!");
                 
-                if (userPass !== ADMIN_PASSWORD) {
-                    alert("❌ ACCESS DENIED\n\nWrong Admin Password.");
-                    // Reset button
-                    btn.innerText = "UNLOCK";
-                    btn.style.background = "linear-gradient(45deg, #ff0040, #cc0033)";
-                    btn.disabled = false;
-                    return;
-                }
-
-                // 4. SUCCESS
-                alert("✅ Access Granted.\n\nSystem Unlocked.");
                 gsap.to("#payment-gate", { opacity: 0, duration: 1, onComplete: () => {
                     document.getElementById('payment-gate').style.display = 'none';
                     document.getElementById('setup-screen').style.display = 'flex';
+                    btn.innerText = "Verified";
+                    btn.disabled = false;
                 }});
-
-            }, 1000); 
+            }, 1500);
         };
 
         // --- LINK GENERATION LOGIC ---
@@ -419,7 +371,6 @@
             if (!bPhone) return alert("Please enter your WhatsApp number!");
 
             // --- MUSIC START ---
-            // Music starts ONLY after user clicks "Generate Link" button
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -427,7 +378,6 @@
                 });
             }
 
-            // Construct URL for Girlfriend
             const baseUrl = window.location.href.split('?')[0];
             const finalUrl = `${baseUrl}?bfName=${encodeURIComponent(bName)}&bfPhone=${encodeURIComponent(bPhone)}`;
 
@@ -464,7 +414,7 @@
                 isPlaying = true;
                 playScene();
                 
-                // Ensure Audio Plays (if admin click didn't persist or she reopened)
+                // Ensure Audio Plays
                 audio.play().catch(e => console.log(e));
             }, 500);
         };
@@ -489,11 +439,12 @@
         const heartShape = new THREE.Shape();
         heartShape.moveTo(0 + 2.5, 0 + 2.5);
         heartShape.bezierCurveTo(0 + 2.5, 0 + 2.5, 0 + 2.0, 0, 0, 0);
-        heartShape.bezierCurveTo(0 - 3.0, 0, 0 - 3.0, 0 + 3.5, 0 - 3.0, 0 + 3.5);
+        heartShape.bezierCurveTo(0 - 3.0, 0, 0 - 3.0, 0 + 3.5, 0 - 3.0, 0 + 3.5, 0 - 3.0, 0 + 5.5, 0 - 1.0, 0 + 7.7, 0 + 2.5, 0 + 9.5);
         heartShape.bezierCurveTo(0 - 3.0, 0 + 5.5, 0 - 1.0, 0 + 7.7, 0 + 2.5, 0 + 9.5);
-        heartShape.bezierCurveTo(0 + 6.0, 0 + 7.7, 0 + 8.0, 0 + 5.5, 0 + 8.0, 0 + 3.5);
-        heartShape.bezierCurveTo(0 + 8.0, 0 + 3.5, 0 + 8.0, 0, 0 + 5.0, 0);
-        heartShape.bezierCurveTo(0 + 3.5, 0, 0 + 2.5, 0 + 2.5, 0 + 2.5, 0 + 2.5);
+        heartShape.bezierCurveTo(0 + 6.0, 0 + 7.7, 0 + 8.0, 0 + 5.5, 0 + 8.0, 0 + 3.5, 0 + 9.5);
+        heartShape.bezierCurveTo(0 + 8.0, 0 + 3.5, 0 + 5.5, 0 + 3.5, 0 + 1.0, 0 + 7.7, 0 + 2.5, 0 + 9.5);
+        heartShape.bezierCurveTo(0 + 8.0, 0 + 3.5, 0 + 5.5, 0 + 8.0, 0 + 3.5, 0 + 1.0, 0 + 7.7, 0 + 2.5, 0 + 9.5);
+        heartShape.bezierCurveTo(0 + 3.5, 0 + 2.5, 0 + 2.5, 0 + 2.0, 0 + 7.7, 0 + 2.5, 0 + 9.5);
         const heartGeo = new THREE.ExtrudeGeometry(heartShape, { depth: 1, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.4, bevelThickness: 0.4 });
         heartGeo.center();
         heartGeo.rotateZ(Math.PI);
@@ -581,7 +532,6 @@
             gsap.to(heart.scale, { x: 5, y: 5, z: 5, duration: 1.5, ease: "elastic.out(1, 0.3)" });
             gsap.to(bloomPass, { strength: 4.0, duration: 0.5, yoyo: true, repeat: 5 });
             
-            // --- WHATSAPP TRIGGER (Mobile Fix: _top) ---
             setTimeout(() => {
                 if(bfNumber) {
                     const num = bfNumber.replace(/[^0-9]/g, '');
@@ -591,7 +541,7 @@
                     console.log("Attempting to open WhatsApp:", waLink);
                     window.open(waLink, '_top'); 
                 }
-            }, 10000); // 10 Seconds Delay
+            }, 10000);
         });
 
         // Sound Effects Helper
@@ -627,7 +577,7 @@
             composer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        init(); // Start Logic
+        init();
         animate();
     </script>
 </body>
